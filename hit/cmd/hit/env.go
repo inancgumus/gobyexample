@@ -25,10 +25,10 @@ type env struct {
 
 // config holds the program's configuration.
 type config struct {
-	url string // url to send requests
-	n   int    // n is the number of requests
-	c   int    // c is the concurrency level
-	rps int    // rps is the requests per second
+	url                 string // url to send requests
+	number_of_requests  int    // n is the number of requests
+	concurrency_level   int    // c is the concurrency level
+	requests_per_second int    // rps is the requests per second
 }
 
 // parseArgs parses command-line flags and positional arguments
@@ -43,9 +43,9 @@ func parseArgs(c *config, args []string, stderr io.Writer) error {
 		fs.PrintDefaults()
 	}
 
-	fs.Var(newPositiveIntValue(&c.n), "n", "Number of requests")
-	fs.Var(newPositiveIntValue(&c.c), "c", "Concurrency level")
-	fs.Var(newPositiveIntValue(&c.rps), "rps", "Requests per second")
+	fs.Var(newPositiveIntValue(&c.number_of_requests), "n", "Number of requests")
+	fs.Var(newPositiveIntValue(&c.concurrency_level), "c", "Concurrency level")
+	fs.Var(newPositiveIntValue(&c.requests_per_second), "rps", "Requests per second")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -73,9 +73,9 @@ func validateArgs(c *config) error {
 	if c.url == "" || u.Host == "" || u.Scheme == "" {
 		return argError(c.url, urlArg, errors.New("requires a valid url"))
 	}
-	if c.n < c.c {
-		err := fmt.Errorf(`should be greater than -c: "%d"`, c.c)
-		return argError(c.n, "flag -n", err)
+	if c.number_of_requests < c.concurrency_level {
+		err := fmt.Errorf(`should be greater than -c: "%d"`, c.concurrency_level)
+		return argError(c.number_of_requests, "flag -n", err)
 	}
 
 	return nil

@@ -18,7 +18,7 @@ func TestParseArgsValidInput(t *testing.T) {
 		{
 			name: "all_flags",
 			args: []string{"-n=10", "-c=5", "-rps=5", "http://test"},
-			want: config{n: 10, c: 5, rps: 5, url: "http://test"},
+			want: config{number_of_requests: 10, concurrency_level: 5, requests_per_second: 5, url: "http://test"},
 		},
 
 		// exercise: test with a mixture of flags

@@ -32,8 +32,8 @@ func main() {
 
 func run(e *env) error {
 	c := config{
-		n: 100, // default request count
-		c: 1,   // default concurrency level
+		number_of_requests: 100, // default request count
+		concurrency_level:  1,   // default concurrency level
 	}
 	if err := parseArgs(&c, e.args[1:], e.stderr); err != nil {
 		return err
@@ -42,7 +42,7 @@ func run(e *env) error {
 	fmt.Fprintf(
 		e.stdout,
 		"%s\n\nSending %d requests to %q (concurrency: %d)\n",
-		logo, c.n, c.url, c.c,
+		logo, c.number_of_requests, c.url, c.concurrency_level,
 	)
 	if e.dry {
 		return nil
@@ -81,11 +81,11 @@ func runHit(e *env, c *config) error {
 		return handleErr(fmt.Errorf("new request: %w", err))
 	}
 	client := &hit.Client{
-		C:       c.c,
-		RPS:     c.rps,
+		C:       c.concurrency_level,
+		RPS:     c.requests_per_second,
 		Timeout: timeoutPerRequest,
 	}
-	sum := client.Do(ctx, request, c.n)
+	sum := client.Do(ctx, request, c.number_of_requests)
 	sum.Fprint(e.stdout)
 
 	if err = ctx.Err(); errors.Is(err, context.DeadlineExceeded) { // set the error
