@@ -29,6 +29,14 @@ type notifier interface {
 	notify(message string)
 }
 
+type multiNotifier []notifier
+
+func (m multiNotifier) notify(msg string) {
+	for _, n := range m {
+		n.notify(msg)
+	}
+}
+
 func notify(s *server, n notifier) {
 	if !s.slow() {
 		return
