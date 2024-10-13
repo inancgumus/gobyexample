@@ -28,3 +28,14 @@ func (s *smsNotifier) notify(msg string) {
 type notifier interface {
 	notify(message string)
 }
+
+func notify(s *server, n notifier) {
+	if !s.slow() {
+		return
+	}
+	msg := fmt.Sprintf(
+		"%s server is slow: %s",
+		s.url, s.responseTime,
+	)
+	n.notify(msg)
+}
