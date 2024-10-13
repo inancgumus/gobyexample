@@ -1,21 +1,15 @@
 package main
 
-import "fmt"
-
-type usage float64
-
-func (u usage) high() bool     { return u >= 0.95 }
-func (u usage) set(to float64) { u = usage(to) }
-
-// correct set should be:
-// func (u usage) set(to float64) usage { return usage(to) }
+import "time"
 
 func main() {
-	cpu := usage(0.99)
-	fmt.Println("high usage?", cpu.high()) // ..true
+	authServer := &server{
+		url:          "auth",
+		responseTime: time.Minute,
+	}
+	slack := &slackNotifier{ /* Slack specific configuration */ }
+	sms := &smsNotifier{ /* SMS specific configuration   */ }
 
-	cpu.set(0.7) // cpu is still 0.99
-	// correct usage:
-	// cpu = cpu.set(0.7)
-	fmt.Println("high usage?", cpu.high()) // ..true
+	notify(authServer, slack)
+	notify(authServer, sms)
 }
