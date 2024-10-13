@@ -7,12 +7,22 @@ import (
 )
 
 func main() {
+	timeout := make(chan struct{})
+	go func() {
+		time.Sleep(5 * time.Second)
+		close(timeout)
+	}()
+
 	c := make(chan time.Duration, 2)
+	go check("server1", c, timeout)
+	go check("server2", c, timeout)
 
-	go check("server1", c)
-	go check("server2", c)
-
-	fmt.Println("fastest response:", <-c)
+	select {
+	case rt := <-c:
+		fmt.Println("fastest response:", rt)
+	case <-timeout:
+		fmt.Println("timed out")
+	}
 }
 
 func check(url string, c chan<- time.Duration) {
