@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	c := make(chan time.Duration)
+	c := make(chan time.Duration, 2)
 
 	go check("server1", c)
 	go check("server2", c)
