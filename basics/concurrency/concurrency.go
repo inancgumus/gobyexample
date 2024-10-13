@@ -8,10 +8,6 @@ import (
 
 func main() {
 	timeout := make(chan struct{})
-	go func() {
-		time.Sleep(5 * time.Second)
-		close(timeout)
-	}()
 
 	c := make(chan time.Duration, 2)
 	go check("server1", c, timeout)
@@ -20,7 +16,8 @@ func main() {
 	select {
 	case rt := <-c:
 		fmt.Println("fastest response:", rt)
-	case <-timeout:
+	case <-time.After(5 * time.Second):
+		close(timeout)
 		fmt.Println("timed out")
 	}
 }
