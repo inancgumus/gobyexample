@@ -25,10 +25,14 @@ func main() {
 	}
 }
 
-func check(url string, c chan<- time.Duration) {
+func check(url string, c chan<- time.Duration, timeout <-chan struct{}) {
 	d := rand.N(10 * time.Second)
-
 	fmt.Printf("checking %s will take %s...\n", url, d)
-	<-time.After(d)
-	c <- d
+
+	select {
+	case <-time.After(d):
+		c <- d
+	case <-timeout:
+		// do nothing here as the function will return
+	}
 }
