@@ -24,3 +24,7 @@ type smsNotifier struct {
 func (s *smsNotifier) notify(msg string) {
 	fmt.Println("sms:", msg)
 }
+
+type notifier interface {
+	notify(message string)
+}
