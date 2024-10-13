@@ -10,6 +10,5 @@ func main() {
 	slack := &slackNotifier{ /* Slack specific configuration */ }
 	sms := &smsNotifier{ /* SMS specific configuration   */ }
 
-	notify(authServer, slack)
-	notify(authServer, sms)
+	notify(authServer, multiNotifier{slack, sms})
 }
