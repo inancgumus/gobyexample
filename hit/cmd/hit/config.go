@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"net/url"
 	"strconv"
 )
@@ -15,8 +16,10 @@ type config struct {
 	rps int
 }
 
-func parseArgs(c *config, args []string) error {
+func parseArgs(c *config, args []string, stderr io.Writer) error {
 	fs := flag.NewFlagSet("hit", flag.ContinueOnError)
+	fs.SetOutput(stderr)
+
 	fs.Usage = func() {
 		fmt.Fprintf(fs.Output(), "usage: %s [options] url\n", fs.Name())
 		fs.PrintDefaults()
