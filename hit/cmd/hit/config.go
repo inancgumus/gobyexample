@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"flag"
+	"fmt"
 	"strconv"
 )
 
@@ -15,13 +16,21 @@ type config struct {
 
 func parseArgs(c *config, args []string) error {
 	fs := flag.NewFlagSet("hit", flag.ContinueOnError)
+	fs.Usage = func() {
+		fmt.Fprintf(fs.Output(), "usage: %s [options] url\n", fs.Name())
+		fs.PrintDefaults()
+	}
 
-	fs.StringVar(&c.url, "url", "", "HTTP server `URL` (required)")
 	fs.Var(asPositiveIntValue(&c.n), "n", "Number of requests")
 	fs.Var(asPositiveIntValue(&c.c), "c", "Concurrency level")
 	fs.Var(asPositiveIntValue(&c.rps), "rps", "Requests per second")
 
-	return fs.Parse(args)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	c.url = fs.Arg(0)
+
+	return nil
 }
 
 type positiveIntValue int
