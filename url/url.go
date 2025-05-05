@@ -2,7 +2,6 @@ package url
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -37,5 +36,17 @@ func (u *URL) String() string {
 	if u == nil {
 		return ""
 	}
-	return fmt.Sprintf("%s://%s/%s", u.Scheme, u.Host, u.Path)
+	var s string
+	if sc := u.Scheme; sc != "" {
+		s += sc
+		s += "://"
+	}
+	if h := u.Host; h != "" {
+		s += h
+	}
+	if p := u.Path; p != "" {
+		s += "/"
+		s += p
+	}
+	return s
 }
