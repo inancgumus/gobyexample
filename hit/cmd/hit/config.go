@@ -4,6 +4,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"net/url"
 	"strconv"
 )
 
@@ -30,6 +31,20 @@ func parseArgs(c *config, args []string) error {
 	}
 	c.url = fs.Arg(0)
 
+	return nil
+}
+
+func validateArgs(c *config) error {
+	u, err := url.Parse(c.url)
+	if err != nil {
+		return fmt.Errorf("invalid value %q for url: %w", c.url, err)
+	}
+	if c.url == "" || u.Host == "" || u.Scheme == "" {
+		return fmt.Errorf("invalid value %q for url: requires a valid url", c.url)
+	}
+	if c.n < c.c {
+		return fmt.Errorf("invalid value %d for flag -n: should be greater than flag -c: %d", c.n, c.c)
+	}
 	return nil
 }
 
