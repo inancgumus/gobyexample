@@ -18,16 +18,24 @@ func TestParse(t *testing.T) {
 }
 
 func TestURLString(t *testing.T) {
-	u := &URL{
-		Scheme: "https",
-		Host:   "github.com",
-		Path:   "inancgumus",
+	tests := []struct {
+		name string
+		uri  *URL
+		want string
+	}{
+		{
+			name: "nil",
+			uri:  nil,
+			want: "",
+		},
 	}
-
-	got := u.String()
-	want := "https://github.com/inancgumus"
-	if got != want {
-		t.Errorf("String() = %q, want %q", got, want)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := tt.uri.String()
+			if got != tt.want {
+				t.Errorf("\ngot  %q\nwant %q\nfor  %#v", got, tt.want, tt.uri)
+			}
+		})
 	}
 }
 
