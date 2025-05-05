@@ -28,6 +28,11 @@ func TestURLString(t *testing.T) {
 			uri:  nil,
 			want: "",
 		},
+		{
+			name: "empty",
+			uri:  new(URL),
+			want: "",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
