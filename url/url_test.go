@@ -138,3 +138,14 @@ func TestParseError(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkURLString(b *testing.B) {
+	u := &URL{
+		Scheme: "https",
+		Host:   "github.com",
+		Path:   "inancgumus",
+	}
+	for b.Loop() {
+		_ = u.String()
+	}
+}
