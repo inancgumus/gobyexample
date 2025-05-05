@@ -1,6 +1,10 @@
 package url
 
-import "testing"
+import (
+	"fmt"
+	"strings"
+	"testing"
+)
 
 func TestParse(t *testing.T) {
 	const uri = "https://github.com/inancgumus"
@@ -147,5 +151,20 @@ func BenchmarkURLString(b *testing.B) {
 	}
 	for b.Loop() {
 		_ = u.String()
+	}
+}
+
+func BenchmarkURLStringLong(b *testing.B) {
+	for _, n := range []int{10, 100, 1_000} {
+		u := &URL{
+			Scheme: strings.Repeat("x", n),
+			Host:   strings.Repeat("y", n),
+			Path:   strings.Repeat("z", n),
+		}
+		b.Run(fmt.Sprintf("%d", n), func(b *testing.B) {
+			for b.Loop() {
+				_ = u.String()
+			}
+		})
 	}
 }
