@@ -29,3 +29,27 @@ func TestQuery(t *testing.T) {
 		time.Sleep(5 * time.Second)
 	})
 }
+
+var counter int
+
+func incr() { counter++ } // data race
+
+func TestIncr(t *testing.T) {
+	t.Parallel()
+	t.Run("once", func(t *testing.T) {
+		t.Parallel()
+		incr()
+		if counter != 1 {
+			t.Errorf("counter = %d, want 1", counter)
+		}
+	})
+
+	t.Run("twice", func(t *testing.T) {
+		t.Parallel()
+		incr()
+		incr()
+		if counter != 3 {
+			t.Errorf("counter = %d, want 3", counter)
+		}
+	})
+}
