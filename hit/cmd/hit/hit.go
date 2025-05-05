@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 )
 
@@ -11,6 +12,13 @@ const logo = `
 \ \  __ \  \ \ \  \/_/\ \/
  \ \_\ \_\  \ \_\    \ \_\
   \/_/\/_/   \/_/     \/_/`
+
+type env struct {
+	stdout io.Writer
+	stderr io.Writer
+	args   []string
+	dryRun bool
+}
 
 func main() {
 	c := config{
