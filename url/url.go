@@ -36,17 +36,29 @@ func (u *URL) String() string {
 	if u == nil {
 		return ""
 	}
-	var s string
+
+	const (
+		lenSchemeSeparator = len("://")
+		lenPathSeparator   = len("/")
+	)
+	lenURL := len(u.Scheme) + lenSchemeSeparator +
+		len(u.Host) + lenPathSeparator +
+		len(u.Path)
+
+	var s strings.Builder
+	s.Grow(lenURL)
+
 	if sc := u.Scheme; sc != "" {
-		s += sc
-		s += "://"
+		s.WriteString(sc)
+		s.WriteString("://")
 	}
 	if h := u.Host; h != "" {
-		s += h
+		s.WriteString(h)
 	}
 	if p := u.Path; p != "" {
-		s += "/"
-		s += p
+		s.WriteByte('/')
+		s.WriteString(p)
 	}
-	return s
+
+	return s.String()
 }
