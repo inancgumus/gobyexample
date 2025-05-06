@@ -16,9 +16,11 @@ func SendN(n int, req *http.Request, opts Options) (Results, error) {
 	}
 	// other checks are omitted for brevity
 
+	results := runPipeline(n, req, opts)
+
 	return func(yield func(Result) bool) {
-		for range n {
-			if !yield(opts.Send(req)) {
+		for result := range results {
+			if !yield(result) {
 				return
 			}
 		}
