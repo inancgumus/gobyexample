@@ -1,9 +1,29 @@
 package hit
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 )
+
+// SendN sends N requests using [Send].
+// It returns a single-use [Results] iterator that
+// pushes a [Result] for each [http.Request] sent.
+func SendN(n int, req *http.Request) (Results, error) {
+	if n <= 0 {
+		return nil, fmt.Errorf("n must be positive: got %d", n)
+	}
+	// other checks are omitted for brevity
+
+	return func(yield func(Result) bool) {
+		for range n {
+			result := Send(http.DefaultClient, req)
+			if !yield(result) {
+				return
+			}
+		}
+	}, nil
+}
 
 // Send sends an HTTP request and returns a performance [Result].
 func Send(_ *http.Client, _ *http.Request) Result {
