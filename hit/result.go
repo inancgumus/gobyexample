@@ -1,6 +1,12 @@
 package hit
 
-import "time"
+import (
+	"iter"
+	"time"
+)
+
+// Results is an iterator for [Result] values.
+type Results iter.Seq[Result]
 
 // Result is performance metrics of a single [http.Request].
 type Result struct {
