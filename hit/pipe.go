@@ -2,6 +2,7 @@ package hit
 
 import (
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -37,6 +38,29 @@ func throttle(in <-chan *http.Request, delay time.Duration) <-chan *http.Request
 			<-t.C
 			out <- r
 		}
+	}()
+
+	return out
+}
+
+func dispatch(in <-chan *http.Request, concurrency int, send SendFunc) <-chan Result {
+	out := make(chan Result)
+
+	var wg sync.WaitGroup
+	wg.Add(concurrency)
+
+	for range concurrency {
+		go func() {
+			defer wg.Done()
+			for req := range in {
+				out <- send(req)
+			}
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(out)
 	}()
 
 	return out
