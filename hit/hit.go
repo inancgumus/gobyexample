@@ -9,7 +9,8 @@ import (
 // SendN sends N requests using [Send].
 // It returns a single-use [Results] iterator that
 // pushes a [Result] for each [http.Request] sent.
-func SendN(n int, req *http.Request) (Results, error) {
+func SendN(n int, req *http.Request, opts Options) (Results, error) {
+	opts = withDefaults(opts)
 	if n <= 0 {
 		return nil, fmt.Errorf("n must be positive: got %d", n)
 	}
@@ -17,8 +18,7 @@ func SendN(n int, req *http.Request) (Results, error) {
 
 	return func(yield func(Result) bool) {
 		for range n {
-			result := Send(http.DefaultClient, req)
-			if !yield(result) {
+			if !yield(opts.Send(req)) {
 				return
 			}
 		}
