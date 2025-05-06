@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"math"
 	"net/http"
 	"os"
+	"os/signal"
 	"time"
 
 	"github.com/inancgumus/gobyexample/hit"
@@ -56,11 +58,14 @@ func run(e *env) error {
 }
 
 func runHit(c *config, stdout io.Writer) error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+
 	req, err := http.NewRequest(http.MethodGet, c.url, http.NoBody)
 	if err != nil {
 		return fmt.Errorf("creating a new request: %w", err)
 	}
-	results, err := hit.SendN(c.n, req, hit.Options{
+	results, err := hit.SendN(ctx, c.n, req, hit.Options{
 		Concurrency: c.c,
 		RPS:         c.rps,
 	})
@@ -70,7 +75,7 @@ func runHit(c *config, stdout io.Writer) error {
 
 	printSummary(hit.Summarize(results), stdout)
 
-	return nil
+	return ctx.Err()
 }
 
 func printSummary(sum hit.Summary, stdout io.Writer) {
