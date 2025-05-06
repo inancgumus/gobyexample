@@ -1,6 +1,9 @@
 package hit
 
-import "net/http"
+import (
+	"net/http"
+	"time"
+)
 
 // SendFunc is a type of function that sends an
 // [http.Request] and returns a [Result].
@@ -32,8 +35,17 @@ func withDefaults(o Options) Options {
 		o.Concurrency = 1
 	}
 	if o.Send == nil {
+		client := &http.Client{
+			Transport: &http.Transport{
+				MaxIdleConnsPerHost: o.Concurrency,
+			},
+			CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
+			Timeout: 30 * time.Second,
+		}
 		o.Send = func(r *http.Request) Result {
-			return Send(http.DefaultClient, r)
+			return Send(client, r)
 		}
 	}
 	return o
