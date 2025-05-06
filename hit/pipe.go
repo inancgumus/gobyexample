@@ -10,9 +10,9 @@ import (
 func runPipeline(ctx context.Context, n int, req *http.Request, opts Options) <-chan Result {
 	requests := produce(ctx, n, req)
 	if opts.RPS > 0 {
-		requests = throttle(requests, time.Second/time.Duration(opts.RPS))
+		requests = throttle(ctx, requests, time.Second/time.Duration(opts.RPS))
 	}
-	return dispatch(requests, opts.Concurrency, opts.Send)
+	return dispatch(ctx, requests, opts.Concurrency, opts.Send)
 }
 
 func produce(ctx context.Context, n int, req *http.Request) <-chan *http.Request {
@@ -32,7 +32,7 @@ func produce(ctx context.Context, n int, req *http.Request) <-chan *http.Request
 	return out
 }
 
-func throttle(in <-chan *http.Request, delay time.Duration) <-chan *http.Request {
+func throttle(ctx context.Context, in <-chan *http.Request, delay time.Duration) <-chan *http.Request {
 	out := make(chan *http.Request)
 
 	go func() {
@@ -40,15 +40,26 @@ func throttle(in <-chan *http.Request, delay time.Duration) <-chan *http.Request
 
 		t := time.NewTicker(delay)
 		for r := range in {
-			<-t.C
-			out <- r
+			// Avoid the delay if the ctx is done.
+			select {
+			case <-t.C:
+			case <-ctx.Done():
+				return
+			}
+			// Avoid sending a message if the ctx is done.
+			// Also avoids leaking goroutines.
+			select {
+			case out <- r:
+			case <-ctx.Done():
+				return
+			}
 		}
 	}()
 
 	return out
 }
 
-func dispatch(in <-chan *http.Request, concurrency int, send SendFunc) <-chan Result {
+func dispatch(ctx context.Context, in <-chan *http.Request, concurrency int, send SendFunc) <-chan Result {
 	out := make(chan Result)
 
 	var wg sync.WaitGroup
@@ -58,7 +69,13 @@ func dispatch(in <-chan *http.Request, concurrency int, send SendFunc) <-chan Re
 		go func() {
 			defer wg.Done()
 			for req := range in {
-				out <- send(req)
+				// Avoids sending a message if the ctx is done.
+				// Also avoids leaking goroutines.
+				select {
+				case out <- send(req):
+				case <-ctx.Done():
+					return
+				}
 			}
 		}()
 	}
