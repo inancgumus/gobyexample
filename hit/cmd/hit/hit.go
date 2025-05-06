@@ -3,7 +3,11 @@ package main
 import (
 	"fmt"
 	"io"
+	"math"
 	"os"
+	"time"
+
+	"github.com/inancgumus/gobyexample/hit"
 )
 
 const logo = `
@@ -52,4 +56,27 @@ func run(e *env) error {
 
 func runHit(c *config, stdout io.Writer) error {
 	return nil
+}
+
+func printSummary(sum hit.Summary, stdout io.Writer) {
+	fmt.Fprintf(stdout, `
+Summary:
+    Success:  %.0f%%
+    RPS:      %.1f
+    Requests: %d
+    Errors:   %d
+    Bytes:    %d
+    Duration: %s
+    Fastest:  %s
+    Slowest:  %s
+`,
+		sum.Success,
+		math.Round(sum.RPS),
+		sum.Requests,
+		sum.Errors,
+		sum.Bytes,
+		sum.Duration.Round(time.Millisecond),
+		sum.Fastest.Round(time.Millisecond),
+		sum.Slowest.Round(time.Millisecond),
+	)
 }
