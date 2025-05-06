@@ -3,6 +3,7 @@ package hit
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 )
@@ -31,14 +32,22 @@ func SendN(ctx context.Context, n int, req *http.Request, opts Options) (Results
 }
 
 // Send sends an HTTP request and returns a performance [Result].
-func Send(_ *http.Client, _ *http.Request) Result {
-	const roundTripTime = 100 * time.Millisecond
-
-	time.Sleep(roundTripTime)
-
+func Send(client *http.Client, req *http.Request) Result {
+	started := time.Now()
+	var (
+		bytes int64
+		code  int
+	)
+	resp, err := client.Do(req)
+	if err == nil { // no error
+		defer resp.Body.Close()
+		code = resp.StatusCode
+		bytes, err = io.Copy(io.Discard, resp.Body)
+	}
 	return Result{
-		Status:   http.StatusOK,
-		Bytes:    10,
-		Duration: roundTripTime,
+		Duration: time.Since(started),
+		Bytes:    bytes,
+		Status:   code,
+		Error:    err,
 	}
 }
