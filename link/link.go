@@ -1,6 +1,8 @@
 package link
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/url"
@@ -36,6 +38,24 @@ func (lnk Link) Validate() error {
 
 // Key is the shortened key of a [Link] URL.
 type Key string
+
+// Shorten shortens the [Link] URL and generates a new [Key]
+// if the [Key] is empty. Otherwise, it returns the same [Key].
+// It returns an error if the [Link] is invalid.
+func Shorten(lnk Link) (Key, error) {
+	if lnk.Key.Empty() {
+		// We use SHA256 (6-base64 characters) by default.
+		// This is a good compromise between uniqueness and length.
+		// In production, you might want to use a more sophisticated
+		// approach, like a database to ensure uniqueness.
+		sum := sha256.Sum256([]byte(lnk.URL))
+		lnk.Key = Key(base64.RawURLEncoding.EncodeToString(sum[:6]))
+	}
+	if err := lnk.Validate(); err != nil {
+		return "", fmt.Errorf("validating: %w", err)
+	}
+	return lnk.Key, nil
+}
 
 // String returns the key without leading or trailing spaces.
 func (key Key) String() string { return strings.TrimSpace(string(key)) }
