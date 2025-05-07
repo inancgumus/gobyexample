@@ -12,7 +12,7 @@ func TestHealth(t *testing.T) {
 	t.Parallel()
 
 	rec := httptest.NewRecorder()
-	Health(rec, httptest.NewRequest(http.MethodGet, "/", nil))
+	Health(rec, newRequest(t, http.MethodGet, "/", http.NoBody))
 
 	if rec.Code != http.StatusOK {
 		t.Errorf("got status code = %d, want %d", rec.Code, http.StatusOK)
