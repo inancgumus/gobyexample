@@ -29,3 +29,21 @@ func (s *Shortener) Shorten(_ context.Context, lnk Link) (Key, error) {
 
 	return lnk.Key, nil
 }
+
+// Resolve resolves the [Key] to its original [Link].
+func (s *Shortener) Resolve(_ context.Context, key Key) (Link, error) {
+	if key.Empty() {
+		return Link{}, fmt.Errorf("validating: empty key: %w", ErrBadRequest)
+	}
+	if err := key.Validate(); err != nil {
+		return Link{}, fmt.Errorf("validating: %w: %w", err, ErrBadRequest)
+	}
+
+	// Retrieve the link from the in-memory storage.
+	lnk, ok := s.links[key]
+	if !ok {
+		return Link{}, fmt.Errorf("retrieving: %w", ErrNotFound)
+	}
+
+	return lnk, nil
+}
