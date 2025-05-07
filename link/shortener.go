@@ -3,11 +3,14 @@ package link
 import (
 	"context"
 	"fmt"
+	"sync"
 )
 
 // Shortener shortens and resolves [Link] values from an in-memory storage.
+// It's safe for concurrent use from multiple goroutines.
 type Shortener struct {
-	links map[Key]Link
+	muLinks sync.RWMutex
+	links   map[Key]Link
 }
 
 // Shorten shortens the [Link] URL and may update the [Key] if the key
@@ -19,6 +22,9 @@ func (s *Shortener) Shorten(_ context.Context, lnk Link) (Key, error) {
 	}
 
 	// Persist the link in the in-memory storage.
+	s.muLinks.Lock()
+	defer s.muLinks.Unlock()
+
 	if _, ok := s.links[lnk.Key]; ok {
 		return "", fmt.Errorf("saving: %w", ErrConflict)
 	}
@@ -40,6 +46,9 @@ func (s *Shortener) Resolve(_ context.Context, key Key) (Link, error) {
 	}
 
 	// Retrieve the link from the in-memory storage.
+	s.muLinks.RLock()
+	defer s.muLinks.RUnlock()
+
 	lnk, ok := s.links[key]
 	if !ok {
 		return Link{}, fmt.Errorf("retrieving: %w", ErrNotFound)
