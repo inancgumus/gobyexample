@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -39,4 +40,21 @@ func Resolve(lg *slog.Logger, links *link.Shortener) http.Handler {
 
 		http.Redirect(w, r, lnk.URL, http.StatusFound)
 	})
+}
+
+func httpError(w http.ResponseWriter, r *http.Request, lg *slog.Logger, err error) {
+	code := http.StatusInternalServerError
+	switch {
+	case errors.Is(err, link.ErrBadRequest):
+		code = http.StatusBadRequest
+	case errors.Is(err, link.ErrConflict):
+		code = http.StatusConflict
+	case errors.Is(err, link.ErrNotFound):
+		code = http.StatusNotFound
+	}
+	if code == http.StatusInternalServerError {
+		lg.ErrorContext(r.Context(), "internal", "error", err)
+		err = link.ErrInternal
+	}
+	http.Error(w, err.Error(), code)
 }
