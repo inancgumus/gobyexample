@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/inancgumus/gobyexample/link"
+	"github.com/inancgumus/gobyexample/link/kit/hlog"
 	"github.com/inancgumus/gobyexample/link/rest"
 )
 
@@ -46,8 +47,10 @@ func run(_ context.Context, cfg config) error {
 	mux.Handle("GET /r/{key}", rest.Resolve(cfg.lg, shortener))
 	mux.HandleFunc("/health", rest.Health)
 
+	loggerMiddleware := hlog.Middleware(cfg.lg)
+
 	srv := &http.Server{
-		Handler:     mux,
+		Handler:     loggerMiddleware(mux),
 		Addr:        cfg.http.addr,
 		ReadTimeout: cfg.http.timeouts.read,
 		IdleTimeout: cfg.http.timeouts.idle,
