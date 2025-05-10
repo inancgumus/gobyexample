@@ -15,11 +15,12 @@ type MiddlewareFunc func(http.Handler) http.Handler
 func Middleware(lg *slog.Logger) MiddlewareFunc {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			next.ServeHTTP(w, r)
+			rr := RecordResponse(next, w, r)
 			lg.LogAttrs(
 				r.Context(), slog.LevelInfo, "request",
 				slog.Any("path", r.URL),
 				slog.String("method", r.Method),
+				slog.Duration("duration", rr.Duration),
 			)
 		})
 	}
