@@ -59,3 +59,18 @@ func Duration(d *time.Duration) MiddlewareFunc {
 		})
 	}
 }
+
+// Interceptor provides hooks to intercept response writes.
+type Interceptor struct {
+	http.ResponseWriter
+	OnWriteHeader func(code int)
+}
+
+// WriteHeader calls the [Interceptor.OnWriteHeader] if any and then
+// forwards the call to the original ResponseWriter's WriteHeader method.
+func (ic *Interceptor) WriteHeader(code int) {
+	if ic.OnWriteHeader != nil {
+		ic.OnWriteHeader(code)
+	}
+	ic.ResponseWriter.WriteHeader(code)
+}
