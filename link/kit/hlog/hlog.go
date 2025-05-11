@@ -60,6 +60,22 @@ func Duration(d *time.Duration) MiddlewareFunc {
 	}
 }
 
+// StatusCode records the HTTP status code into the provided variable.
+// It wraps the handler's [http.ResponseWriter] with [Interceptor].
+// Not safe for concurrent use. Use it only to process a single request.
+func StatusCode(n *int) MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			*n = http.StatusOK
+			w = &Interceptor{
+				ResponseWriter: w,
+				OnWriteHeader:  func(code int) { *n = code },
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
 // Interceptor provides hooks to intercept response writes.
 type Interceptor struct {
 	http.ResponseWriter
