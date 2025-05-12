@@ -30,3 +30,13 @@ func (h *LogHandler) Handle(ctx context.Context, r slog.Record) error {
 	}
 	return h.Handler.Handle(ctx, r)
 }
+
+// WithAttrs returns a new [LogHandler] with the provided attributes.
+func (h *LogHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return NewLogHandler(h.Handler.WithAttrs(attrs))
+}
+
+// WithGroup returns a new [LogHandler] with the provided group name.
+func (h *LogHandler) WithGroup(name string) slog.Handler {
+	return NewLogHandler(h.Handler.WithGroup(name))
+}
