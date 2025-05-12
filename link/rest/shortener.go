@@ -2,7 +2,6 @@ package rest
 
 import (
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -12,34 +11,35 @@ import (
 
 // Shorten returns an [http.Handler] that shortens URLs.
 func Shorten(lg *slog.Logger, links *link.Shortener) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	with := newResponder(lg)
+
+	return hio.Handler(func(w http.ResponseWriter, r *http.Request) hio.Handler {
 		key, err := links.Shorten(r.Context(), link.Link{
 			Key: link.Key(r.PostFormValue("key")),
 			URL: r.PostFormValue("url"),
 		})
 		if err != nil {
-			httpError(w, r, lg, fmt.Errorf("shortening: %w", err))
-			return
+			return with.Error("shortening: %w", err)
 		}
 
-		w.WriteHeader(http.StatusCreated)
-		fmt.Fprint(w, key)
+		return with.Text(http.StatusCreated, key.String())
 	})
 }
 
 // Resolve returns an HTTP handler that resolves shortened link URLs.
 // It extracts a {key} from [http.Request] using [http.Request.PathValue].
 func Resolve(lg *slog.Logger, links *link.Shortener) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	with := newResponder(lg)
+
+	return hio.Handler(func(w http.ResponseWriter, r *http.Request) hio.Handler {
 		lnk, err := links.Resolve(
 			r.Context(), link.Key(r.PathValue("key")),
 		)
 		if err != nil {
-			httpError(w, r, lg, fmt.Errorf("resolving: %w", err))
-			return
+			return with.Error("resolving: %w", err)
 		}
 
-		http.Redirect(w, r, lnk.URL, http.StatusFound)
+		return with.Redirect(http.StatusFound, lnk.URL)
 	})
 }
 
