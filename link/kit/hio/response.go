@@ -28,3 +28,13 @@ func (rs Responder) Redirect(code int, url string) Handler {
 		return nil
 	}
 }
+
+// Text writes a text response with the status code.
+func (rs Responder) Text(code int, message string) Handler {
+	return func(w http.ResponseWriter, r *http.Request) Handler {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(code)
+		fmt.Fprint(w, message)
+		return nil
+	}
+}
