@@ -1,6 +1,7 @@
 package hio
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 )
@@ -35,6 +36,20 @@ func (rs Responder) Text(code int, message string) Handler {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(code)
 		fmt.Fprint(w, message)
+		return nil
+	}
+}
+
+// JSON writes a JSON response with the status code.
+func (rs Responder) JSON(code int, from any) Handler {
+	data, err := json.Marshal(from)
+	if err != nil {
+		return rs.Error("encoding json: %w", err)
+	}
+	return func(w http.ResponseWriter, r *http.Request) Handler {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(code)
+		w.Write(data)
 		return nil
 	}
 }
