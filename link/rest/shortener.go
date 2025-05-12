@@ -16,7 +16,7 @@ func Shorten(lg *slog.Logger, links *link.Shortener) http.Handler {
 	return hio.Handler(func(w http.ResponseWriter, r *http.Request) hio.Handler {
 		var lnk link.Link
 
-		err := hio.DecodeJSON(r.Body, &lnk)
+		err := hio.DecodeJSON(hio.MaxBytesReader(w, r.Body, 4_096), &lnk)
 		if err != nil {
 			return with.Error("decoding: %w: %w", err, link.ErrBadRequest)
 		}
