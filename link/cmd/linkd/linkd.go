@@ -12,6 +12,7 @@ import (
 
 	"github.com/inancgumus/gobyexample/link"
 	"github.com/inancgumus/gobyexample/link/kit/hlog"
+	"github.com/inancgumus/gobyexample/link/kit/traceid"
 	"github.com/inancgumus/gobyexample/link/rest"
 )
 
@@ -42,15 +43,17 @@ func main() {
 func run(_ context.Context, cfg config) error {
 	shortener := new(link.Shortener)
 
+	lg := slog.New(traceid.NewLogHandler(cfg.lg.Handler()))
+
 	mux := http.NewServeMux()
-	mux.Handle("POST /shorten", rest.Shorten(cfg.lg, shortener))
-	mux.Handle("GET /r/{key}", rest.Resolve(cfg.lg, shortener))
+	mux.Handle("POST /shorten", rest.Shorten(lg, shortener))
+	mux.Handle("GET /r/{key}", rest.Resolve(lg, shortener))
 	mux.HandleFunc("/health", rest.Health)
 
-	loggerMiddleware := hlog.Middleware(cfg.lg)
+	loggerMiddleware := hlog.Middleware(lg)
 
 	srv := &http.Server{
-		Handler:     loggerMiddleware(mux),
+		Handler:     traceid.Middleware(loggerMiddleware(mux)),
 		Addr:        cfg.http.addr,
 		ReadTimeout: cfg.http.timeouts.read,
 		IdleTimeout: cfg.http.timeouts.idle,
