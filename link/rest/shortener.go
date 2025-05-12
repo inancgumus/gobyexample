@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/inancgumus/gobyexample/link"
+	"github.com/inancgumus/gobyexample/link/kit/hio"
 )
 
 // Shorten returns an [http.Handler] that shortens URLs.
@@ -40,6 +41,18 @@ func Resolve(lg *slog.Logger, links *link.Shortener) http.Handler {
 
 		http.Redirect(w, r, lnk.URL, http.StatusFound)
 	})
+}
+
+// newResponder returns a new HTTP responder with an error handler
+// that maps the errors to the appropriate HTTP status codes.
+func newResponder(lg *slog.Logger) hio.Responder {
+	err := func(err error) hio.Handler {
+		return func(w http.ResponseWriter, r *http.Request) hio.Handler {
+			httpError(w, r, lg, err)
+			return nil
+		}
+	}
+	return hio.NewResponder(err)
 }
 
 func httpError(w http.ResponseWriter, r *http.Request, lg *slog.Logger, err error) {
