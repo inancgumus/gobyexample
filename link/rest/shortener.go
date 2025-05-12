@@ -14,15 +14,20 @@ func Shorten(lg *slog.Logger, links *link.Shortener) http.Handler {
 	with := newResponder(lg)
 
 	return hio.Handler(func(w http.ResponseWriter, r *http.Request) hio.Handler {
-		key, err := links.Shorten(r.Context(), link.Link{
-			Key: link.Key(r.PostFormValue("key")),
-			URL: r.PostFormValue("url"),
-		})
+		var lnk link.Link
+
+		err := hio.DecodeJSON(r.Body, &lnk)
+		if err != nil {
+			return with.Error("decoding: %w: %w", err, link.ErrBadRequest)
+		}
+		key, err := links.Shorten(r.Context(), lnk)
 		if err != nil {
 			return with.Error("shortening: %w", err)
 		}
 
-		return with.Text(http.StatusCreated, key.String())
+		return with.JSON(http.StatusCreated, map[string]link.Key{
+			"key": key,
+		})
 	})
 }
 
