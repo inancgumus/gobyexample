@@ -1,4 +1,67 @@
-// Package hlog provides HTTP logging functionality.
+// Package hlog (HTTP log) provides HTTP request and response logging.
+//
+// The package follows a design philosophy of providing both high-level
+// convenience functions and low-level building blocks. This approach
+// gives users the flexibility to either use the simple, ready-to-use
+// solutions or build custom logging with fine-grained control when needed.
+//
+// # Core Components
+//
+//   - [MiddlewareFunc]: The standard middleware pattern for HTTP handlers
+//   - [Response]: A structured container for response metrics
+//   - [RecordResponse]: A high-level utility that executes handlers while collecting metrics
+//   - [Duration] and [StatusCode]: Low-level middleware components for selective metric collection
+//   - [Interceptor]: A ResponseWriter wrapper that captures HTTP response details
+//
+// # Design Benefits
+//
+// The package offers a balance between convenience and flexibility:
+//
+//   - [RecordResponse] activates all metrics collection for simple cases
+//   - Individual middleware components can be used selectively when ResponseWriter
+//     wrapping might cause interface compatibility issues (e.g., with [http.Flusher])
+//   - Separation between metric collection and logging
+//
+// # Basic Usage
+//
+// Using the convenience middleware for standard logging:
+//
+//	// Create a middleware that logs request details with slog
+//	logger := hlog.Middleware(slog.Default())
+//
+//	// Apply it to your handler
+//	http.Handle("/", logger(yourHandler))
+//
+// # Advanced Usage
+//
+// Building custom middleware with the lower-level components:
+//
+//	var duration time.Duration
+//	h := Duration(&duration)(yourHandler)
+//	h.ServeHTTP(w, r)
+//	slog.Info(..., "duration", duration)
+//
+// With status code tracking:
+//
+//	var status int
+//	h := StatusCode(&status)(yourHandler)
+//	h.ServeHTTP(w, r)
+//	slog.Info(..., "status", status)
+//
+// Using the [RecordResponse] function:
+//
+//	rr := RecordResponse(yourHandler, w, r)
+//	slog.Info(..., "status", rr.StatusCode)
+//
+// Using the [Interceptor] type to intercept HTTP status codes:
+//
+//	var status int
+//	w := Interceptor{
+//		ResponseWriter: w,
+//		OnWriteHeader: func(code int) { status = code },
+//	}
+//	yourHandler.ServeHTTP(w, r)
+//	slog.Info(..., "status", status)
 package hlog
 
 import (
