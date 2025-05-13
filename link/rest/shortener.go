@@ -1,3 +1,29 @@
+// Package rest provides link management services over HTTP.
+//
+// # Main components
+//
+//   - [Shorten] - Shortens a URL.
+//   - [Resolve] - Resolves a shortened URL.
+//   - [Health] - Checks the health of the service.
+//
+// # Example handler usage
+//
+//	mux := http.NewServeMux()
+//	mux.Handle("POST /shorten", Shorten(...))
+//	mux.Handle("GET /r/{key}", Resolve(...))
+//	mux.HandleFunc("GET /health", Health)
+//
+// Shorten a URL:
+//
+//	$ curl localhost:8080/shorten -d '{"url":"https://x.com/inancgumus"}'
+//
+// Resolve a shortened URL:
+//
+//	$ curl localhost:8080/r/639508a7
+//
+// Health check:
+//
+//	$ curl localhost:8080/health
 package rest
 
 import (
