@@ -4,10 +4,11 @@ import (
 	"context"
 	"database/sql"
 	_ "embed"
+	"errors"
 	"fmt"
 	"testing"
 
-	_ "modernc.org/sqlite"
+	"modernc.org/sqlite"
 )
 
 //go:embed schema.sql
@@ -47,4 +48,13 @@ func DialTestDB(tb testing.TB) *sql.DB {
 	})
 
 	return db
+}
+
+func isPrimaryKeyViolation(err error) bool {
+	var serr *sqlite.Error
+	if errors.As(err, &serr) {
+		return serr.Code() == 1555
+		// See: sqlite.org/rescode.html#constraint_primarykey
+	}
+	return false
 }
