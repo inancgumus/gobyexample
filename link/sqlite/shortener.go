@@ -31,6 +31,9 @@ func (s *Shortener) Shorten(ctx context.Context, lnk link.Link) (link.Key, error
 		`INSERT INTO links (short_key, uri) VALUES ($1, $2)`,
 		lnk.Key, lnk.URL,
 	)
+	if isPrimaryKeyViolation(err) {
+		return "", fmt.Errorf("saving: %w", link.ErrConflict)
+	}
 	if err != nil {
 		return "", fmt.Errorf("saving: %w: %w", err, link.ErrInternal)
 	}
