@@ -6,6 +6,10 @@ type notifier interface {
 	notify(message string)
 }
 
+func notify(n notifier, msg string) {
+	n.notify(msg)
+}
+
 type slackNotifier struct {
 	apiKey string
 }
