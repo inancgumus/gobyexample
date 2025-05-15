@@ -3,6 +3,8 @@ package sqlite
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
+	"encoding/base64"
 	"errors"
 	"fmt"
 
@@ -66,4 +68,30 @@ func (s *Shortener) Resolve(ctx context.Context, key link.Key) (link.Link, error
 	}
 
 	return link.Link{Key: key, URL: uri}, nil
+}
+
+type base64String string
+
+// Value implements the driver.Valuer interface.
+func (bs base64String) Value() (driver.Value, error) {
+	return base64.StdEncoding.EncodeToString([]byte(bs)), nil
+}
+
+// Scan implements the sql.Scanner interface.
+func (bs *base64String) Scan(src any) error {
+	ss, ok := src.(string)
+	if !ok {
+		return fmt.Errorf("decoding: %q is %T, not string", ss, src)
+	}
+	dst, err := base64.StdEncoding.DecodeString(ss)
+	if err != nil {
+		return fmt.Errorf("decoding %q: %w", ss, err)
+	}
+	*bs = base64String(dst)
+	return nil
+}
+
+// String implements the fmt.Stringer interface.
+func (bs base64String) String() string {
+	return string(bs)
 }
