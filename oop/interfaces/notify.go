@@ -10,6 +10,14 @@ func notify(n notifier, msg string) {
 	n.notify(msg)
 }
 
+type multiNotifier []notifier
+
+func (mn multiNotifier) notify(msg string) {
+	for _, n := range mn {
+		n.notify(msg)
+	}
+}
+
 type slackNotifier struct {
 	apiKey string
 }
