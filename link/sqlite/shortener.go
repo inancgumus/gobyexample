@@ -32,7 +32,7 @@ func (s *Shortener) Shorten(ctx context.Context, lnk link.Link) (link.Key, error
 	_, err = s.db.ExecContext(
 		ctx,
 		`INSERT INTO links (short_key, uri) VALUES ($1, $2)`,
-		lnk.Key, lnk.URL,
+		lnk.Key, base64String(lnk.URL),
 	)
 	if isPrimaryKeyViolation(err) {
 		return "", fmt.Errorf("saving: %w", link.ErrConflict)
@@ -54,7 +54,7 @@ func (s *Shortener) Resolve(ctx context.Context, key link.Key) (link.Link, error
 	}
 
 	// Retrieve the link from the database.
-	var uri string
+	var uri base64String
 	err := s.db.QueryRowContext(
 		ctx,
 		`SELECT uri FROM links WHERE short_key = $1`,
@@ -67,7 +67,7 @@ func (s *Shortener) Resolve(ctx context.Context, key link.Key) (link.Link, error
 		return link.Link{}, fmt.Errorf("retrieving: %w: %w", err, link.ErrInternal)
 	}
 
-	return link.Link{Key: key, URL: uri}, nil
+	return link.Link{Key: key, URL: uri.String()}, nil
 }
 
 type base64String string
