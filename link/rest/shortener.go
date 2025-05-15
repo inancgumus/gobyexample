@@ -27,6 +27,7 @@
 package rest
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -35,8 +36,14 @@ import (
 	"github.com/inancgumus/gobyexample/link/kit/hio"
 )
 
+// Shortener is a link shortener service that shortens URLs.
+type Shortener interface {
+	// Shorten shortens a link and returns its key.
+	Shorten(context.Context, link.Link) (link.Key, error)
+}
+
 // Shorten returns an [http.Handler] that shortens URLs.
-func Shorten(lg *slog.Logger, links *link.Shortener) http.Handler {
+func Shorten(lg *slog.Logger, links Shortener) http.Handler {
 	with := newResponder(lg)
 
 	return hio.Handler(func(w http.ResponseWriter, r *http.Request) hio.Handler {
@@ -57,9 +64,15 @@ func Shorten(lg *slog.Logger, links *link.Shortener) http.Handler {
 	})
 }
 
+// Resolver is a link resolver service that resolves shortened URLs.
+type Resolver interface {
+	// Resolve retrieves a link by its key.
+	Resolve(context.Context, link.Key) (link.Link, error)
+}
+
 // Resolve returns an HTTP handler that resolves shortened link URLs.
 // It extracts a {key} from [http.Request] using [http.Request.PathValue].
-func Resolve(lg *slog.Logger, links *link.Shortener) http.Handler {
+func Resolve(lg *slog.Logger, links Resolver) http.Handler {
 	with := newResponder(lg)
 
 	return hio.Handler(func(w http.ResponseWriter, r *http.Request) hio.Handler {
