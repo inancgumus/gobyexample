@@ -10,10 +10,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/inancgumus/gobyexample/link"
 	"github.com/inancgumus/gobyexample/link/kit/hlog"
 	"github.com/inancgumus/gobyexample/link/kit/traceid"
 	"github.com/inancgumus/gobyexample/link/rest"
+	"github.com/inancgumus/gobyexample/link/sqlite"
 )
 
 type config struct {
@@ -22,6 +22,7 @@ type config struct {
 		timeouts struct{ read, idle time.Duration }
 	}
 	lg *slog.Logger
+	db struct{ dsn string }
 }
 
 func main() {
@@ -29,6 +30,7 @@ func main() {
 	flag.StringVar(&cfg.http.addr, "http.addr", "localhost:8080", "http address to listen on")
 	flag.DurationVar(&cfg.http.timeouts.read, "http.timeouts.read", 20*time.Second, "read timeout")
 	flag.DurationVar(&cfg.http.timeouts.idle, "http.timeouts.idle", 40*time.Second, "idle timeout")
+	flag.StringVar(&cfg.db.dsn, "db.dsn", "file:links.db?mode=rwc", "database DSN")
 	flag.Parse()
 
 	cfg.lg = slog.New(slog.NewTextHandler(os.Stderr, nil)).With("app", "linkd")
@@ -40,8 +42,12 @@ func main() {
 	}
 }
 
-func run(_ context.Context, cfg config) error {
-	shortener := new(link.Shortener)
+func run(ctx context.Context, cfg config) error {
+	db, err := sqlite.Dial(ctx, cfg.db.dsn)
+	if err != nil {
+		return fmt.Errorf("dialing database: %w", err)
+	}
+	shortener := sqlite.NewShortener(db)
 
 	lg := slog.New(traceid.NewLogHandler(cfg.lg.Handler()))
 
