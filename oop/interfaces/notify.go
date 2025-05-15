@@ -2,6 +2,10 @@ package main
 
 import "fmt"
 
+type notifier interface {
+	notify(message string)
+}
+
 type slackNotifier struct {
 	apiKey string
 }
