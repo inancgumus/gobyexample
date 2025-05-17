@@ -65,10 +65,11 @@ func runHit(c *config, stdout io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("creating a new request: %w", err)
 	}
-	results, err := hit.SendN(ctx, c.n, req, hit.Options{
-		Concurrency: c.c,
-		RPS:         c.rps,
-	})
+	results, err := hit.SendNWith(
+		ctx, c.n, req,
+		hit.Concurrency(c.c),
+		hit.RPS(c.rps),
+	)
 	if err != nil {
 		return fmt.Errorf("sending requests: %w", err)
 	}
