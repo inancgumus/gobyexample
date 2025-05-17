@@ -8,11 +8,25 @@ import (
 	"time"
 )
 
+// SendNWith is like [SendN] but takes a variety of [Option] functions.
+func SendNWith(ctx context.Context, n int, req *http.Request, opts ...Option) (Results, error) {
+	lopts := Defaults()
+	for _, apply := range opts {
+		apply(&lopts)
+	}
+	return sendRequests(ctx, n, req, lopts)
+}
+
 // SendN sends N requests using [Send].
 // It returns a single-use [Results] iterator that
 // pushes a [Result] for each [http.Request] sent.
 func SendN(ctx context.Context, n int, req *http.Request, opts Options) (Results, error) {
 	opts = withDefaults(opts)
+	return sendRequests(ctx, n, req, opts)
+}
+
+// sendRequests sends N requests using the provided options.
+func sendRequests(ctx context.Context, n int, req *http.Request, opts Options) (Results, error) {
 	if n <= 0 {
 		return nil, fmt.Errorf("n must be positive: got %d", n)
 	}
